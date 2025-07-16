@@ -1,0 +1,10 @@
+#BlueJ class context
+comment0.target=ClientMessageListener
+comment0.text=\r\n\ interface\ ClientMessageListener\ here.\r\n\ \r\n\ @author\ Hiroaki\u3000Kaji\r\n\ @version\ 2025/6/6\r\n
+comment1.params=senderHandler\ fullMessage
+comment1.target=void\ onClientMessage(ClientHandler,\ java.lang.String)
+comment1.text=\r\n\ \u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\u304B\u3089\u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u53D7\u4FE1\u3057\u305F\u3068\u304D\u306B\u547C\u3073\u51FA\u3055\u308C\u308B\u30B3\u30FC\u30EB\u30D0\u30C3\u30AF\u30E1\u30BD\u30C3\u30C9\r\n\ @param\ sender\ \u30E1\u30C3\u30BB\u30FC\u30B8\u3092\u9001\u4FE1\u3057\u305FClientHandler\r\n\ @param\ fullMessage\ \u53D7\u4FE1\u3057\u305F\u5B8C\u5168\u306A\u30E1\u30C3\u30BB\u30FC\u30B8\u6587\u5B57\u5217\r\n
+comment2.params=disconnectedHandler\ reason
+comment2.target=void\ onClientDisconnected(ClientHandler,\ java.lang.String)
+comment2.text=\r\n\ \u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\u63A5\u7D9A\u304C\u5931\u308F\u308C\u305F\u3068\u304D\u306B\u547C\u3073\u51FA\u3055\u308C\u308B\u30B3\u30FC\u30EB\u30D0\u30C3\u30AF\u30E1\u30BD\u30C3\u30C9\r\n\ @param\ user\ \u63A5\u7D9A\u304C\u5931\u308F\u308C\u305FClientHandler\r\n\ @param\ reason\ \u63A5\u7D9A\u55AA\u5931\u306E\u7406\u7531\r\n
+numComments=3

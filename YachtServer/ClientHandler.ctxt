@@ -1,0 +1,18 @@
+#BlueJ class context
+comment0.target=ClientHandler
+comment0.text=\r\n\ Write\ a\ description\ of\ class\ Handler\ here.\r\n\r\n\ @author\ (your\ name)\r\n\ @version\ (a\ version\ number\ or\ a\ date)\r\n
+comment1.params=clientSocket\ listener
+comment1.target=ClientHandler(java.net.Socket,\ ClientMessageListener)
+comment2.params=user
+comment2.target=void\ setUser(YachtClientUser)
+comment3.params=
+comment3.target=YachtClientUser\ getUser()
+comment4.params=
+comment4.target=java.net.Socket\ getClientSocket()
+comment5.params=
+comment5.target=void\ run()
+comment6.params=message
+comment6.target=void\ sendMessageToClient(java.lang.String)
+comment7.params=
+comment7.target=void\ close()
+numComments=8

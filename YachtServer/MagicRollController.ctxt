@@ -1,0 +1,10 @@
+#BlueJ class context
+comment0.target=MagicRollController
+comment0.text=\r\n\ MagicRollController\r\n\ \r\n\ @author\ morita\r\n\ @version\ 2025/6/13\r\n
+comment1.params=
+comment1.target=MagicRollController()
+comment1.text=\r\n\ MagicRollController\ \u30AF\u30E9\u30B9\u306E\u30A4\u30F3\u30B9\u30BF\u30F3\u30B9\u306E\u305F\u3081\u306E\u30B3\u30F3\u30B9\u30C8\u30E9\u30AF\u30BF\r\n
+comment2.params=dicerolls\ LorR
+comment2.target=int[]\ rolldices(int[],\ java.lang.String)
+comment2.text=\r\n\ \u30E1\u30BD\u30C3\u30C9\u306E\u4F8B\ -\ \u30E1\u30BD\u30C3\u30C9\u3068\u3068\u3082\u306B\u3053\u306E\u30B3\u30E1\u30F3\u30C8\u3082\u7F6E\u304D\u63DB\u3048\u3066\u304F\u3060\u3055\u3044.\r\n\ \r\n\ @param\ \ y\ \ \ \ \u30E1\u30BD\u30C3\u30C9\u306E\u305F\u3081\u306E\u30B5\u30F3\u30D7\u30EB\u5F15\u6570\r\n\ @return\ \ \ \ \ \ \ \ x\ \u3068\ y\ \u306E\u548C\r\n
+numComments=3

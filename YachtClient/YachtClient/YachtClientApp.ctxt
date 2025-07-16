@@ -1,0 +1,8 @@
+#BlueJ class context
+comment0.target=YachtClientApp
+comment1.params=args
+comment1.target=void\ main(java.lang.String[])
+comment2.params=font
+comment2.target=void\ setGlobalFont(javax.swing.plaf.FontUIResource)
+comment2.text=\r\n\ Swing\u30A2\u30D7\u30EA\u30B1\u30FC\u30B7\u30E7\u30F3\u5168\u4F53\u306E\u30C7\u30D5\u30A9\u30EB\u30C8\u30D5\u30A9\u30F3\u30C8\u3092\u5909\u66F4\u3059\u308B\u305F\u3081\u306E\u30E1\u30BD\u30C3\u30C9\r\n
+numComments=3

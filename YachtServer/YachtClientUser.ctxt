@@ -1,0 +1,22 @@
+#BlueJ class context
+comment0.target=YachtClientUser
+comment0.text=\r\n\ \u30E8\u30C3\u30C8\u306E\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\u30E6\u30FC\u30B6\u30AF\u30E9\u30B9\r\n\ YachtClientUser\ \r\n\ \r\n\ @author\ Hiroaki\ Kaji\r\n\ @version\ 2025/06/10\r\n
+comment1.params=name\ handler
+comment1.target=YachtClientUser(java.lang.String,\ ClientHandler)
+comment2.params=
+comment2.target=ClientHandler\ getClientHandler()
+comment3.params=name
+comment3.target=void\ setName(java.lang.String)
+comment4.params=
+comment4.target=java.lang.String\ getName()
+comment5.params=gameID
+comment5.target=void\ setCurrentLobbyOrGameId(java.lang.String)
+comment6.params=
+comment6.target=java.lang.String\ getCurrentLobbyOrGameId()
+comment7.params=ReadyState
+comment7.target=void\ setReady(boolean)
+comment8.params=
+comment8.target=boolean\ getReady()
+comment9.params=
+comment9.target=java.lang.String\ toString()
+numComments=10
