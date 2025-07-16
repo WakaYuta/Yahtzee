@@ -35,7 +35,9 @@ public class YachtClientController extends WindowAdapter implements Runnable, Ac
                                CMD_YOUR_TURN = "YOUR_TURN", CMD_DICE_ROLLED = "DICE_ROLLED",
                                CMD_SCORE_RECORDED = "SCORE_RECORDED", CMD_GAME_ENDED = "GAME_ENDED",
                                CMD_ERROR = "ERROR",
-                               CMD_BROADCAST_DICE_ROLL = "BROADCAST_DICE_ROLL";
+                               CMD_BROADCAST_DICE_ROLL = "BROADCAST_DICE_ROLL",
+                               CMD_IKASAMA_ROLL = "IKASAMA_ROLL",
+                               CMD_FH_OR_STRAIGHT_ROLL = "FH_OR_STRAIGHT_ROLL";
     
     /**
      * コンストラクタ
@@ -189,6 +191,9 @@ public class YachtClientController extends WindowAdapter implements Runnable, Ac
         boolean isMyTurn = args.equals(model.getPlayerName());
         view.updateTurnInfo(args, isMyTurn);
         view.updateAllScoreCards(model.getPlayerScores(), model.getPlayerName(), args);
+        PlayerScoreModel myScoreModel = model.getScoreModel(model.getPlayerName());
+        view.setIkasamaRollButtonEnabled(isMyTurn && !myScoreModel.hasUsedIkasama());
+        view.setFhOrStraightButtonEnabled(isMyTurn && !myScoreModel.hasUsedFhOrStraight());
         if(isMyTurn) {
             view.resetDice();
         }
@@ -307,6 +312,12 @@ public class YachtClientController extends WindowAdapter implements Runnable, Ac
             case "roll_dice":
                 // サーバーにリクエストを送る前に、まずクライアント側でアニメーションを開始する 
                 sendMessage(model.getCurrentGameId() + ":" + CMD_ROLL_DICE + ":" + view.getDiceKeepPattern());
+                break;
+            case "ikasama_roll":
+                sendMessage(model.getCurrentGameId() + ":" + CMD_IKASAMA_ROLL + ":" + view.getDiceKeepPattern());
+                break;
+            case "fh_or_straight_roll":
+                sendMessage(model.getCurrentGameId() + ":" + CMD_FH_OR_STRAIGHT_ROLL + ":" + view.getDiceKeepPattern());
                 break;
             default:
                 // 当てはまらない場合はスコア記録ボタン

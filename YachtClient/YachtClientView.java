@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.swing.*;
 import javax.swing.JPanel;
-
+import javax.swing.BoxLayout;
 
 public class YachtClientView extends JFrame {
 
@@ -18,7 +18,7 @@ public class YachtClientView extends JFrame {
     private static final String APPNAME = "ヤッツィークライアント";
 
     private JTextField hostTextField, nameTextField;
-    private JButton connectButton, closeButton, createLobbyButton, joinLobbyButton, readyButton, rollDiceButton;
+    private JButton connectButton, closeButton, createLobbyButton, joinLobbyButton, readyButton, rollDiceButton, ikasamaRollButton,fhOrStraightButton;
     private JList<String> lobbyList;
     private JTextArea lobbyInfoArea, messageArea;
     private JLabel turnInfoLabel, rollsLeftLabel;
@@ -64,6 +64,12 @@ public class YachtClientView extends JFrame {
         
         rollDiceButton.setActionCommand("roll_dice");
         rollDiceButton.addActionListener(controller);
+        
+        ikasamaRollButton.setActionCommand("ikasama_roll");
+        ikasamaRollButton.addActionListener(controller);
+        
+        fhOrStraightButton.setActionCommand("fh_or_straight_roll");
+        fhOrStraightButton.addActionListener(controller);
         
         this.addWindowListener(controller);
     }
@@ -145,6 +151,23 @@ public class YachtClientView extends JFrame {
         diceManager = new DiceManager(dices);
         
         rollDiceButton = new JButton("サイコロを振る");
+        rollDiceButton.setPreferredSize(new Dimension(180, 80));
+
+        ikasamaRollButton = new JButton("イカサマ (456)");
+        fhOrStraightButton = new JButton("イカサマ (FH/ST)");
+        
+        ikasamaRollButton.setToolTipText("4,5,6の目のみが出る、特別なダイスを振ります。");
+        fhOrStraightButton.setToolTipText("50%の確率で、フルハウスかストレートの目が完成します。");
+        
+        JPanel ikasamaPanel = new JPanel();
+        ikasamaPanel.setLayout(new BoxLayout(ikasamaPanel, BoxLayout.Y_AXIS)); // 縦並び
+        ikasamaPanel.add(ikasamaRollButton);
+        ikasamaPanel.add(Box.createRigidArea(new Dimension(0, 5))); // ボタンの間に少しだけ隙間をあける
+        ikasamaPanel.add(fhOrStraightButton);
+
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        actionPanel.add(rollDiceButton);
+        actionPanel.add(ikasamaPanel);
         
         // ターン情報とロール回数も上部に表示
         JPanel turnInfoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -154,7 +177,7 @@ public class YachtClientView extends JFrame {
         turnInfoPanel.add(rollsLeftLabel);
 
         topArea.add(dicePanel, BorderLayout.CENTER);
-        topArea.add(rollDiceButton, BorderLayout.EAST);
+        topArea.add(actionPanel, BorderLayout.EAST);
         topArea.add(turnInfoPanel, BorderLayout.SOUTH);
 
         // --- 中央エリア（ゲームメッセージ） ---
@@ -246,6 +269,8 @@ public class YachtClientView extends JFrame {
         joinLobbyButton.setEnabled(false);
         readyButton.setEnabled(false);
         rollDiceButton.setEnabled(false);
+        ikasamaRollButton.setEnabled(false);
+        fhOrStraightButton.setEnabled(false);
     }
 
     public void setConnectedState() {
@@ -348,5 +373,13 @@ public class YachtClientView extends JFrame {
     
     public String getDiceKeepPattern() {
         return diceManager.getKeepPattern();
+    }
+    
+    public void setIkasamaRollButtonEnabled(boolean enabled) {
+        ikasamaRollButton.setEnabled(enabled);
+    }
+    
+    public void setFhOrStraightButtonEnabled(boolean enabled) {
+        fhOrStraightButton.setEnabled(enabled);
     }
 }

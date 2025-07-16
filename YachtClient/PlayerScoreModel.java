@@ -7,6 +7,8 @@ public class PlayerScoreModel {
     private final String playerName;
     private final Map<String, Integer> scores = new HashMap<>();
     private final Set<String> recordedCategories = new HashSet<>();
+    private boolean hasUsedIkasama = false;
+    private boolean hasUsedFhOrStraight = false;
     private int totalScore = 0;
 
     public PlayerScoreModel(String playerName) {
@@ -30,6 +32,23 @@ public class PlayerScoreModel {
     public boolean isRecorded(String category) {
         return recordedCategories.contains(category);
     }
+    
+    public boolean hasUsedIkasama() {
+        return hasUsedIkasama; 
+    }
+    
+    public void setUsedIkasama(boolean used) {
+        this.hasUsedIkasama = used;
+    }
+    
+    public boolean hasUsedFhOrStraight() {
+        return hasUsedFhOrStraight; 
+    }
+    
+    public void setUsedFhOrStraight(boolean used) {
+        this.hasUsedFhOrStraight = used; 
+    }
+    
 
     public int getTotalScore() {
         return totalScore;

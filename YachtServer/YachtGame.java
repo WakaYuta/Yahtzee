@@ -101,7 +101,7 @@ public class YachtGame {
 
         MagicRollController mrcontroller = new MagicRollController();
         
-        diceRolls = mrcontroller.rolldices(diceRolls,LorR);
+        diceRolls = mrcontroller.rolldices(diceRolls, LorR);
 
         remainRollCount--;
         System.out.println("サイコロを振りました: " + Arrays.toString(diceRolls) + " (残り " + (remainRollCount) + "回)");
@@ -271,7 +271,45 @@ public class YachtGame {
                 String diceValues = convertDiceRollsToText(newDice);
                 String messagePayload = arguments + ":" + diceValues + ":" + getRemainRollCount();
                 return new GameCommandResult(true, "BROADCAST_DICE_ROLL:" + messagePayload, true);
-                            
+                     
+            case "IKASAMA_ROLL":
+                if (sender.hasUsedIkasamaRoll()) {
+                return new GameCommandResult(false, "ERROR:イカサマロール(456)はもう使えません");
+                }
+
+                if (getRemainRollCount() <= 0) {
+                    return new GameCommandResult(false, "ERROR:NO_ROLLS_LEFT");
+                }
+            
+                MagicRollController mrcontroller = new MagicRollController();
+                int[] ikasama1Dice = mrcontroller.rollIkasamaDices(getDices(), arguments);
+                remainRollCount--; 
+            
+                sender.setUsedIkasamaRoll(true); 
+
+                String ikasama1diceValues = convertDiceRollsToText(ikasama1Dice);
+                String ikasama1messagePayload = arguments + ":" + ikasama1diceValues + ":" + getRemainRollCount();
+                return new GameCommandResult(true, "BROADCAST_DICE_ROLL:" + ikasama1messagePayload, true);
+
+            case "FH_OR_STRAIGHT_ROLL":
+                if (sender.hasUsedFhOrStraightRoll()) {
+                return new GameCommandResult(false, "ERROR:イカサマロール(FH/ST)はもう使えません");
+                }
+                if (getRemainRollCount() <= 0) {
+                    return new GameCommandResult(false, "ERROR:NO_ROLLS_LEFT"); 
+                }
+                
+                MagicRollController mrcontroller2 = new MagicRollController();
+                int[] ikasama2Dice = mrcontroller2.rollikasamadices2(getDices(), arguments);
+                remainRollCount--; 
+                
+                sender.setUsedFhOrStraightRoll(true);
+
+                String ikasama2DiceValues = convertDiceRollsToText(ikasama2Dice);
+                String ikasama2messagePayload = arguments + ":" + ikasama2DiceValues + ":" + getRemainRollCount();
+                return new GameCommandResult(true, "BROADCAST_DICE_ROLL:" + ikasama2messagePayload, true);
+
+
             case "RECORD_SCORE":
                 try {
                     yachtCategory category = yachtCategory.valueOf(arguments);

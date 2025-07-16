@@ -566,6 +566,8 @@ public class YachtServer implements ClientMessageListener{
                 break;
 
             case "ROLL_DICE":
+            case "IKASAMA_ROLL":
+            case "FH_OR_STRAIGHT_ROLL":
             case "RECORD_SCORE":
             case "GET_SCORE_SHEET":
                 //ゲーム内で呼び出される関数はidが正しいかどうかを検証した後、ゲームに受け渡す。
@@ -581,7 +583,7 @@ public class YachtServer implements ClientMessageListener{
                     return;
                 }
 
-                if (!game.getCurrentPlayer().equals(sender)) {
+                if (!cmd.equals("FH_OR_STRAIGHT_ROLL") && !cmd.equals("IKASAMA_ROLL") && !game.getCurrentPlayer().equals(sender)) {
                     sendMessage(sender, "ERROR:It's not your turn.");
                     return;
                 }

@@ -26,12 +26,16 @@ class YachtClientUser{
     // ロビーid管理と準備完了bool
     private String currentLobbyOrGameId; // 現在参加しているロビーまたはゲームのID
     private boolean isReady; // ロビーで準備完了状態か
+    private boolean hasUsedIkasamaRoll; // イカサマを使ったかどうか
+    private boolean hasUsedFhOrStraightRoll;
     
     public YachtClientUser(String name, ClientHandler handler) {
         this.name = name;
         this.clientHandler = handler;
         this.currentLobbyOrGameId = null;
         this.isReady = false;
+        this.hasUsedIkasamaRoll = false; 
+        this.hasUsedFhOrStraightRoll = false;
     }
     // ClientHandlerへの参照をセット/ゲットするメソッド
     public ClientHandler getClientHandler() {
@@ -62,5 +66,17 @@ class YachtClientUser{
 
     public String toString() {
         return "NAME=" + getName();
+    }
+    public boolean hasUsedIkasamaRoll() {
+        return hasUsedIkasamaRoll;
+    }
+    public void setUsedIkasamaRoll(boolean used) {
+        this.hasUsedIkasamaRoll = used;
+    }
+    public boolean hasUsedFhOrStraightRoll() {
+        return hasUsedFhOrStraightRoll;
+    }
+    public void setUsedFhOrStraightRoll(boolean used) {
+        this.hasUsedFhOrStraightRoll = used;
     }
 }
