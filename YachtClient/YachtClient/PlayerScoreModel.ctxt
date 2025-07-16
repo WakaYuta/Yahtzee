@@ -1,0 +1,19 @@
+#BlueJ class context
+comment0.target=PlayerScoreModel
+comment1.params=playerName
+comment1.target=PlayerScoreModel(java.lang.String)
+comment2.params=
+comment2.target=java.lang.String\ getPlayerName()
+comment3.params=category\ score
+comment3.target=void\ setScore(java.lang.String,\ int)
+comment4.params=category
+comment4.target=int\ getScore(java.lang.String)
+comment5.params=category
+comment5.target=boolean\ isRecorded(java.lang.String)
+comment6.params=
+comment6.target=int\ getTotalScore()
+comment7.params=
+comment7.target=void\ recalculateTotalScore()
+comment8.params=
+comment8.target=void\ reset()
+numComments=9

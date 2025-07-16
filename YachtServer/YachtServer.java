@@ -191,7 +191,7 @@ public class YachtServer implements ClientMessageListener{
         broadcastToGame(gameId, "PLAYER_LEFT_GAME:" + player.getName());
 
         if (game.getPlayerList().isEmpty()) {
-            endGame(gameId); // ゲームが空になったら終了
+            endGame(gameId, "ABORTED"); // ゲームが空になったら終了
         } else {
             // 現在のターンプレイヤーが離脱した場合、次のプレイヤーにターンを渡すなどのロジック
             if (game.getCurrentPlayer() == player) {
@@ -318,32 +318,45 @@ public class YachtServer implements ClientMessageListener{
         activeGames.put(gameId, game); // 進行中のゲームとして登録
         gameLobbies.remove(gameId); // ロビーから削除
 
-        for (YachtClientUser player : players) {
-            player.setCurrentLobbyOrGameId(gameId); // プレイヤーに現在参加しているゲームIDを設定
-            player.setReady(false); // ゲームが始まったら準備状態をリセット
-            sendMessage(player, "GAME_STARTED:" + gameId);
+        // 参加プレイヤー全員の名前をカンマ区切りの文字列にする
+        StringBuilder playerNamesBuilder = new StringBuilder();
+        for (int i = 0; i < players.size(); i++) {
+            playerNamesBuilder.append(players.get(i).getName());
+            // 最後のプレイヤーでなければ、カンマを追加する
+            if (i < players.size() - 1) {
+                playerNamesBuilder.append(",");
+            }
         }
+        String playerNames = playerNamesBuilder.toString();
+
+        for (YachtClientUser player : players) {
+            player.setCurrentLobbyOrGameId(gameId);
+            player.setReady(false);
+            // GAME_STARTEDメッセージに、プレイヤー全員の名前のリストを追加して送信
+            sendMessage(player, "GAME_STARTED:" + gameId + ":" + playerNames);
+        }
+        
         // ゲーム開始時の最初のターンを通知
         YachtClientUser currentPlayer = game.getCurrentPlayer();
         if (currentPlayer != null) {
             broadcastToGame(gameId, "YOUR_TURN:" + currentPlayer.getName());
         }
-        broadcastLobbyList(); // ロビーリスト更新を全体に通知 (ゲーム中のロビーはリストから消えるため)
+        broadcastLobbyList();
     }
 
     /**
      * ゲームを終了する。
      * @param gameId 終了するゲームのID
      */
-    public void endGame(String gameId) {
+    public void endGame(String gameId, String finalScores) {
         YachtGame game = activeGames.remove(gameId);
         if (game != null) {
             System.out.println("Game " + gameId + " ended.");
-            // ゲームに参加していた全プレイヤーにゲーム終了を通知
+            // ゲームに参加していた全プレイヤーにゲーム終了と最終結果を通知
             for (YachtClientUser player : game.getPlayerList()) {
-                sendMessage(player, "GAME_ENDED:" + gameId);
-                player.setCurrentLobbyOrGameId(null); // プレイヤーのゲームIDをリセット
-                player.setReady(false); // 準備状態もリセット
+                sendMessage(player, "GAME_ENDED:" + finalScores);
+                player.setCurrentLobbyOrGameId(null);
+                player.setReady(false);
             }
         }
         broadcastLobbyList(); // ロビーリスト更新を全体に通知 (ゲーム終了でロビーに空きができるため)
@@ -575,6 +588,16 @@ public class YachtServer implements ClientMessageListener{
                 
                 GameCommandResult gameCommandResult = game.handleGameCommand(sender, cmd, args);
                 
+                // GameCommandResultからメッセージリストを取得
+                List<GameCommandResult.MessageToSend> messages = gameCommandResult.getMessages();
+                
+                // 最初のメッセージがGAME_OVERかどうかを特別にチェック
+                if (!messages.isEmpty() && messages.get(0).message.startsWith("GAME_OVER")) {
+                    String finalScores = messages.get(0).message.split(":", 2)[1];
+                    endGame(effectiveContextId, finalScores); // endGameメソッドに最終スコアを渡す
+                    return; // これ以降の処理はしない
+                }
+        
                 // GameCommandResultからメッセージリストを取得し、適切に送信
                 for (GameCommandResult.MessageToSend msg : gameCommandResult.getMessages()) {
                     if (msg.sendToAll) {

@@ -47,10 +47,12 @@ class DiceManager implements DiceClickListener {
         return pattern.toString();
     }
 
-    public void startRollAnimation() {
-        for (DiceSeqComponent dice : dices) {
-            if (!dice.isLocked()) {
-                dice.startAnimation();
+    // startRollAnimation メソッドを、どのサイコロをキープするか指定できるように変更
+    public void startRollAnimation(String keepPattern) {
+        for (int i = 0; i < dices.length; i++) {
+            // keepPatternの文字が 'R' (Roll) のサイコロだけをアニメーションさせる
+            if (keepPattern.charAt(i) == 'R') {
+                dices[i].startAnimation();
             }
         }
     }

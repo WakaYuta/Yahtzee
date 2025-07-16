@@ -235,22 +235,11 @@ public class YachtGame {
     public boolean isGameContinuable() {
         return playerList.size() >= 2;
     }
-    
-    /**
-     * 全てのプレイヤーが全てのカテゴリを埋めたらゲーム終了と判断する。
-     * @return ゲームが終了していればtrue
-     */
-    public boolean isGameOver() {
-        if (isGameContinuable()) return true; // プレイヤー一人だけになったら終了
 
-        for (PlayerScoreSheet scoreSheet : playerScores.values()) {
-            for (yachtCategory category : yachtCategory.values()) {
-                if (!scoreSheet.isRecorded(category)) {
-                    return false; // 未記入のカテゴリがあればゲームは終わっていない
-                }
-            }
-        }
-        return true; // 全員が全て記入済みならゲーム終了
+    public boolean isGameOver() {
+        // 全カテゴリ数(12) x プレイヤー数が、総ラウンド数になる
+        // currentRoundは0から始まるので、+1する
+        return (currentRound + 1) > yachtCategory.values().length;
     }
 
     /**
@@ -277,8 +266,12 @@ public class YachtGame {
                      return new GameCommandResult(false, "ERROR:NO_ROLLS_LEFT");
                 }
                 int[] newDice = rollDice(arguments);
-                return new GameCommandResult(true, "DICE_ROLLED:" + convertDiceRollsToText(newDice) + ":REMAIN_ROLLS:" + getRemainRollCount());
-            
+                
+                // 結果を全員にブロードキャストするメッセージを作成
+                String diceValues = convertDiceRollsToText(newDice);
+                String messagePayload = arguments + ":" + diceValues + ":" + getRemainRollCount();
+                return new GameCommandResult(true, "BROADCAST_DICE_ROLL:" + messagePayload, true);
+                            
             case "RECORD_SCORE":
                 try {
                     yachtCategory category = yachtCategory.valueOf(arguments);
@@ -290,15 +283,25 @@ public class YachtGame {
                     
                     if (success) {
                         this.nextTurn(); // 次のターンへ移行
+                        // ゲームが終了したかどうかをチェック
+                        if (isGameOver()) {
+                            // ゲームが終了した場合、最終結果メッセージを作成して返す
+                            return new GameCommandResult(true, "GAME_OVER:" + getFinalScores());
+                        }
                         String nextPlayerName = getCurrentPlayer().getName(); // 次のプレイヤー名を取得
-    
+
                         List<GameCommandResult.MessageToSend> messages = new ArrayList<>();
-                        // 1. スコア記録成功のメッセージ (送信者のみに)
+
+                        //スコア記録の情報を全員に送信
+                        String scorerName = sender.getName();
+                        int recordedScore = getPlayerCategoryScore(sender, category);
                         messages.add(new GameCommandResult.MessageToSend(
-                            "SCORE_RECORDED:" + category.name() + ":" + getPlayerCategoryScore(sender, category) + ":TOTAL_SCORE:" + getPlayerTotalScore(sender),
-                            false // senderにのみ送信
+                            // メッセージ形式: SCORE_RECORDED:プレイヤー名:役名:点数
+                            "SCORE_RECORDED:" + scorerName + ":" + category.name() + ":" + recordedScore,
+                            true // 全員に送信
                         ));
-                        // 2. 次のターン通知のメッセージ (全員に)
+
+                        //次のターン通知のメッセージ (全員に)
                         messages.add(new GameCommandResult.MessageToSend(
                             "YOUR_TURN:" + nextPlayerName,
                             true // 全員に送信
@@ -344,4 +347,23 @@ public class YachtGame {
             System.out.println("------------------------------------");
         }
     }
+    
+    /**
+     * 全プレイヤーの最終スコアを文字列として組み立てる
+     * 形式: player1,score1;player2,score2;...
+     * @return 最終スコアの文字列
+     */
+    private String getFinalScores() {
+        StringBuilder sb = new StringBuilder();
+        for (YachtClientUser player : playerList) {
+            sb.append(player.getName()).append(",")
+              .append(getPlayerTotalScore(player)).append(";");
+        }
+        // 最後のセミコロンを削除
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        return sb.toString();
+    }
+    
 }

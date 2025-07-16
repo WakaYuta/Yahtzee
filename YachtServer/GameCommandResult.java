@@ -33,7 +33,14 @@ class GameCommandResult {
         this.messages = new ArrayList<>();
         this.messages.add(new MessageToSend(message, false)); // デフォルトはsenderにのみ送信
     }
-
+    
+    //コンストラクタ（単一のメッセージで、送信先を全員にするか指定する場合） 
+    public GameCommandResult(boolean success, String message, boolean sendToAll) {
+        this.success = success;
+        this.messages = new ArrayList<>();
+        this.messages.add(new MessageToSend(message, sendToAll));
+    }
+    
     // コンストラクタ（複数のメッセージを返す場合）
     private GameCommandResult(boolean success, List<MessageToSend> messages) {
         this.success = success;

@@ -1,11 +1,14 @@
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.*;
+import javax.swing.JPanel;
+
 
 public class YachtClientView extends JFrame {
 
@@ -19,14 +22,26 @@ public class YachtClientView extends JFrame {
     private JList<String> lobbyList;
     private JTextArea lobbyInfoArea, messageArea;
     private JLabel turnInfoLabel, rollsLeftLabel;
-    private Map<String, JLabel> scoreLabels = new HashMap<>();
-    private Map<String, JButton> scoreButtons = new HashMap<>();
     private JPanel lobbyPanel, gamePanel, scoreCardPanel;
-    
     private Map<String, String> categoryEnToJpMap = new HashMap<>();
 
     public YachtClientView() {
         super(APPNAME);
+        // 英語と日本語の役名の対応表
+        String[] categories = {
+            "ONES", "TWOS", "THREES", "FOURS", "FIVES", "SIXES",
+            "CHOICE", "FOUR_OF_A_KIND", "FULL_HOUSE",
+            "SMALL_STRAIGHT", "LARGE_STRAIGHT", "YACHT"
+        };
+        String[] categoryJP = {
+            "1の目", "2の目", "3の目", "4の目", "5の目", "6の目",
+            "チョイス", "フォーカード", "フルハウス",
+            "Sストレート", "Lストレート", "ヤッツィー"
+        };
+        for (int i = 0; i < categories.length; i++) {
+            categoryEnToJpMap.put(categories[i], categoryJP[i]);
+        }
+        
         setupUI();
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
@@ -50,29 +65,26 @@ public class YachtClientView extends JFrame {
         rollDiceButton.setActionCommand("roll_dice");
         rollDiceButton.addActionListener(controller);
         
-        for (JButton button : scoreButtons.values()) {
-            button.addActionListener(controller);
-        }
         this.addWindowListener(controller);
     }
 
     private void setupUI() {
         JPanel topPanel = createTopPanel();
         lobbyPanel = createLobbyPanel();
-        scoreCardPanel = createScoreCardPanel();
-        gamePanel = createGamePanel();
+        gamePanel = createGamePanel(); // 新しいレイアウトのゲームパネル
 
         Container contentPane = this.getContentPane();
         contentPane.setLayout(new BorderLayout(5, 5));
         contentPane.add(topPanel, BorderLayout.NORTH);
-        contentPane.add(lobbyPanel, BorderLayout.WEST);
-        contentPane.add(gamePanel, BorderLayout.CENTER);
-        contentPane.add(scoreCardPanel, BorderLayout.EAST);
+        
+        // 初めはロビーパネルを表示し、ゲームが始まったらゲームパネルに切り替える
+        // ここでは両方追加しておくが、最初はゲームパネルを非表示にする
+        contentPane.add(lobbyPanel, BorderLayout.CENTER);
+        contentPane.add(gamePanel, BorderLayout.EAST); // 最初はEASTに仮置き
 
         setInitialComponentState();
         
-        gamePanel.setVisible(false);
-        scoreCardPanel.setVisible(false);
+        gamePanel.setVisible(false); // 最初はゲームパネルを隠しておく
     }
 
     private JPanel createTopPanel() {
@@ -118,73 +130,114 @@ public class YachtClientView extends JFrame {
     }
   
     private JPanel createGamePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("ゲーム"));
-        
-        messageArea = new JTextArea();
-        messageArea.setEditable(false);
-        messageArea.setLineWrap(true);
-        panel.add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        
-        JPanel controlPanel = new JPanel(new BorderLayout());
-        JPanel dicePanel = new JPanel(new FlowLayout());
+        // ゲーム全体のパネル
+        JPanel mainGamePanel = new JPanel(new BorderLayout(5, 5));
+
+        // --- 上部エリア（サイコロとボタン） ---
+        JPanel topArea = new JPanel(new BorderLayout());
+        JPanel dicePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         
         final String IMAGE_PREFIX = "images/dice_";
-
         for (int i = 0; i < 5; i++) {
             dices[i] = new DiceSeqComponent(1000 + i * 100, IMAGE_PREFIX);
             dicePanel.add(dices[i]);
         }
         diceManager = new DiceManager(dices);
         
-        controlPanel.add(dicePanel, BorderLayout.CENTER);
-        
         rollDiceButton = new JButton("サイコロを振る");
-        controlPanel.add(rollDiceButton, BorderLayout.EAST);
         
-        JPanel infoPanel = new JPanel(new GridLayout(1, 2));
+        // ターン情報とロール回数も上部に表示
+        JPanel turnInfoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         turnInfoLabel = new JLabel("ターン: ---");
         rollsLeftLabel = new JLabel("残りロール回数: -");
-        infoPanel.add(turnInfoLabel);
-        infoPanel.add(rollsLeftLabel);
-        controlPanel.add(infoPanel, BorderLayout.SOUTH);
-        
-        panel.add(controlPanel, BorderLayout.SOUTH);
-        
-        return panel;
+        turnInfoPanel.add(turnInfoLabel);
+        turnInfoPanel.add(rollsLeftLabel);
+
+        topArea.add(dicePanel, BorderLayout.CENTER);
+        topArea.add(rollDiceButton, BorderLayout.EAST);
+        topArea.add(turnInfoPanel, BorderLayout.SOUTH);
+
+        // --- 中央エリア（ゲームメッセージ） ---
+        messageArea = new JTextArea();
+        messageArea.setEditable(false);
+        messageArea.setLineWrap(true);
+        JScrollPane messageScrollPane = new JScrollPane(messageArea);
+        // メッセージエリアが大きくなりすぎないようにサイズを設定
+        messageScrollPane.setPreferredSize(new Dimension(400, 300));
+
+        // --- 下部エリア（スコアカード） ---
+        scoreCardPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        JScrollPane scoreScrollPane = new JScrollPane(scoreCardPanel);
+
+        // 各エリアをメインパネルに配置
+        mainGamePanel.add(topArea, BorderLayout.NORTH);
+        mainGamePanel.add(messageScrollPane, BorderLayout.CENTER);
+        mainGamePanel.add(scoreScrollPane, BorderLayout.SOUTH);
+
+        return mainGamePanel;
     }
 
-    private JPanel createScoreCardPanel() {
-        JPanel panel = new JPanel();
-        panel.setBorder(BorderFactory.createTitledBorder("スコアカード"));
-        
+    /**
+     * モデルのデータに基づいて、全プレイヤーのスコアカードUIを再構築する
+     * @param allPlayerScores 全プレイヤーのスコアデータ
+     * @param myName このクライアントのプレイヤー名
+     * @param currentPlayerName 現在ターンのプレイヤー名
+     */
+    public void updateAllScoreCards(Map<String, PlayerScoreModel> allPlayerScores, String myName, String currentPlayerName) {
+        scoreCardPanel.removeAll(); //既存のスコアカードをすべて消去する
+
         String[] categories = {
             "ONES", "TWOS", "THREES", "FOURS", "FIVES", "SIXES",
             "CHOICE", "FOUR_OF_A_KIND", "FULL_HOUSE",
             "SMALL_STRAIGHT", "LARGE_STRAIGHT", "YACHT"
         };
-        String[] categoryJP = {
-            "1の目", "2の目", "3の目", "4の目", "5の目", "6の目",
-            "チョイス", "フォーカード", "フルハウス",
-            "Sストレート", "Lストレート", "ヤッツィー"
-        };
         
-        panel.setLayout(new GridLayout(categories.length, 3, 2, 2));
-        for (int i = 0; i < categories.length; i++) {
-            categoryEnToJpMap.put(categories[i], categoryJP[i]);
-            
-            panel.add(new JLabel(categoryJP[i]));
-            JLabel scoreLabel = new JLabel("0");
-            scoreLabels.put(categories[i], scoreLabel);
-            panel.add(scoreLabel);
-            JButton scoreButton = new JButton("記録");
-            scoreButton.setActionCommand(categories[i]);
-            scoreButtons.put(categories[i], scoreButton);
-            panel.add(scoreButton);
-        }
-        return panel;
-    }
+        // 全プレイヤーのスコアモデルをループして、スコアカードを1つずつ作成
+        for (PlayerScoreModel playerScore : allPlayerScores.values()) {
+            JPanel singleCard = new JPanel();
+            singleCard.setBorder(BorderFactory.createTitledBorder(playerScore.getPlayerName()));
+            singleCard.setLayout(new GridLayout(categories.length + 2, 3, 2, 2)); // Total Scoreと空白行を追加
 
+            // カテゴリごとのラベルとボタンを作成
+            for (String category : categories) {
+                singleCard.add(new JLabel(categoryEnToJpMap.get(category)));
+                singleCard.add(new JLabel(String.valueOf(playerScore.getScore(category))));
+
+                JButton recordButton = new JButton("記録");
+                recordButton.setActionCommand(category);
+                
+                boolean isMyTurn = playerScore.getPlayerName().equals(myName) && myName.equals(currentPlayerName);
+                boolean isAlreadyRecorded = playerScore.isRecorded(category);
+                recordButton.setEnabled(isMyTurn && !isAlreadyRecorded);
+                
+                if(rollDiceButton.getActionListeners().length > 0) {
+                   recordButton.addActionListener(rollDiceButton.getActionListeners()[0]);
+                }
+                
+                singleCard.add(recordButton);
+            }
+            
+            singleCard.add(new JLabel(" ")); // 見た目のための空白行
+            singleCard.add(new JLabel(" "));
+            singleCard.add(new JLabel(" "));
+            
+            singleCard.add(new JLabel("合計点"));
+            singleCard.add(new JLabel(String.valueOf(playerScore.getTotalScore())));
+            singleCard.add(new JLabel()); // 空白のセル
+
+            scoreCardPanel.add(singleCard);
+        }
+
+        scoreCardPanel.revalidate();
+        scoreCardPanel.repaint();
+    }
+    
+    public void resetScoreCard() {
+         scoreCardPanel.removeAll();
+         scoreCardPanel.revalidate();
+         scoreCardPanel.repaint();
+    }
+    
     public void setInitialComponentState() {
         connectButton.setEnabled(true);
         closeButton.setEnabled(false);
@@ -193,9 +246,6 @@ public class YachtClientView extends JFrame {
         joinLobbyButton.setEnabled(false);
         readyButton.setEnabled(false);
         rollDiceButton.setEnabled(false);
-        for (JButton button : scoreButtons.values()) {
-            button.setEnabled(false);
-        }
     }
 
     public void setConnectedState() {
@@ -217,13 +267,16 @@ public class YachtClientView extends JFrame {
     }
 
     public void showLobbyScreen() {
-        lobbyPanel.setVisible(true);
         gamePanel.setVisible(false);
-        scoreCardPanel.setVisible(false);
+        lobbyPanel.setVisible(true);
+        // lobbyPanelをCENTERに配置しなおす
+        getContentPane().add(lobbyPanel, BorderLayout.CENTER);
     }
     
     public void showGameScreen() {
-        lobbyPanel.setVisible(false);
+         lobbyPanel.setVisible(false);
+        // gamePanelをCENTERに配置しなおす
+        getContentPane().add(gamePanel, BorderLayout.CENTER);
         gamePanel.setVisible(true);
         scoreCardPanel.setVisible(true);
     }
@@ -253,13 +306,6 @@ public class YachtClientView extends JFrame {
         diceManager.setMyTurn(isMyTurn);
     }
     
-    public void updateScoreButtons(boolean isMyTurn, Set<String> recordedCategories) {
-        for (Map.Entry<String, JButton> entry : scoreButtons.entrySet()) {
-            boolean isRecorded = recordedCategories.contains(entry.getKey());
-            entry.getValue().setEnabled(isMyTurn && !isRecorded);
-        }
-    }
-
     public void updateDice(String[] diceValues, boolean canRollAgain) {
         int[] intValues = new int[diceValues.length];
         try {
@@ -268,8 +314,7 @@ public class YachtClientView extends JFrame {
             }
             diceManager.scheduleStopAnimation(intValues);
             
-            diceManager.setMyTurn(canRollAgain);
-            rollDiceButton.setEnabled(canRollAgain);
+            rollDiceButton.setEnabled(diceManager.getMyTurn() && canRollAgain);
         } catch (NumberFormatException e) {
             System.err.println("Failed to parse dice values: " + e.getMessage());
         }
@@ -283,21 +328,9 @@ public class YachtClientView extends JFrame {
             diceManager.setRollsLeft(0);
         }
     }
-
-    public void updateScoreCard(String category, String score) {
-        scoreLabels.get(category).setText(score);
-        scoreButtons.get(category).setEnabled(false);
-    }
     
     public void resetDice() {
         diceManager.resetDices();
-    }
-    
-    public void resetScoreCard() {
-         for(String category : scoreLabels.keySet()){
-            scoreLabels.get(category).setText("0");
-            scoreButtons.get(category).setEnabled(false);
-        }
     }
 
     public void appendMessage(String text) {
@@ -309,8 +342,8 @@ public class YachtClientView extends JFrame {
     public String getSelectedLobby() { return lobbyList.getSelectedValue(); }
     public Map<String, String> getCategoryEnToJpMap() { return categoryEnToJpMap; }
     
-    public void startDiceAnimation() {
-        diceManager.startRollAnimation();
+    public void startDiceAnimation(String keepPattern) {
+        diceManager.startRollAnimation(keepPattern);
     }
     
     public String getDiceKeepPattern() {

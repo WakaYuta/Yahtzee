@@ -34,7 +34,8 @@ public class YachtClientController extends WindowAdapter implements Runnable, Ac
                                CMD_LEFT_LOBBY = "LEFT_LOBBY", CMD_GAME_STARTED = "GAME_STARTED",
                                CMD_YOUR_TURN = "YOUR_TURN", CMD_DICE_ROLLED = "DICE_ROLLED",
                                CMD_SCORE_RECORDED = "SCORE_RECORDED", CMD_GAME_ENDED = "GAME_ENDED",
-                               CMD_ERROR = "ERROR";
+                               CMD_ERROR = "ERROR",
+                               CMD_BROADCAST_DICE_ROLL = "BROADCAST_DICE_ROLL";
     
     /**
      * コンストラクタ
@@ -133,7 +134,7 @@ public class YachtClientController extends WindowAdapter implements Runnable, Ac
             case CMD_LEFT_LOBBY:    handleLobbyLeft(); break;
             case CMD_GAME_STARTED:  handleGameStarted(args); break;
             case CMD_YOUR_TURN:     handleYourTurn(args); break;
-            case CMD_DICE_ROLLED:   handleDiceRolled(args); break;
+            case CMD_BROADCAST_DICE_ROLL: handleBroadcastDiceRoll(args); break;
             case CMD_SCORE_RECORDED:handleScoreRecorded(args); break;
             case CMD_GAME_ENDED:    handleGameEnded(args); break;
             case CMD_ERROR:         handleError(args); break;
@@ -167,45 +168,98 @@ public class YachtClientController extends WindowAdapter implements Runnable, Ac
     }
     
     private void handleGameStarted(String args) {
-        model.setCurrentGameId(args);
-        view.appendMessage("\n--- ゲーム " + args + " スタート! ---");
+        // メッセージ形式: gameId:player1,player2,player3
+        String[] parts = args.split(":", 2);
+        String gameId = parts[0];
+        String playerNamesString = parts[1];
+
+        model.setCurrentGameId(gameId);
+        
+        // 受け取ったプレイヤー名のリストから、各プレイヤーのスコアモデルを初期化する
+        String[] playerNames = playerNamesString.split(",");
+        for (String name : playerNames) {
+            model.getScoreModel(name); // これでGameModelに全プレイヤーの情報がセットされる
+        }
+        
+        view.appendMessage("\n--- ゲーム " + gameId + " スタート! ---");
         view.showGameScreen();
     }
 
     private void handleYourTurn(String args) {
         boolean isMyTurn = args.equals(model.getPlayerName());
         view.updateTurnInfo(args, isMyTurn);
-        view.updateScoreButtons(isMyTurn, model.getRecordedCategories());
-        view.resetDice();
+        view.updateAllScoreCards(model.getPlayerScores(), model.getPlayerName(), args);
+        if(isMyTurn) {
+            view.resetDice();
+        }
     }
 
-    private void handleDiceRolled(String args) {
-        String[] diceParts = args.split(":", 3);
-        String[] diceValues = diceParts[0].split(",");
-        String rollsLeft = diceParts.length > 2 ? diceParts[2] : "0";
+    private void handleBroadcastDiceRoll(String args) {
+        // メッセージ形式: keepPattern:diceValues:rollsLeft
+        String[] parts = args.split(":", 3);
+        String keepPattern = parts[0];
+        String[] diceValues = parts[1].split(",");
+        String rollsLeft = parts[2];
         boolean canRollAgain = !rollsLeft.equals("0");
-
+        
+        // 全員の画面で、アニメーションを開始し、結果をセットする
+        view.startDiceAnimation(keepPattern);
         view.updateDice(diceValues, canRollAgain);
         view.updateRollsLeft(rollsLeft);
     }
 
     private void handleScoreRecorded(String args) {
         String[] scoreParts = args.split(":");
-        String category = scoreParts[0];
-        String score = scoreParts[1];
+        String playerName = scoreParts[0];
+        String category = scoreParts[1];
+        int score = Integer.parseInt(scoreParts[2]);
+
+        // 該当プレイヤーのスコアモデルを更新
+        PlayerScoreModel scoreModel = model.getScoreModel(playerName);
+        scoreModel.setScore(category, score);
         
-        model.addRecordedCategory(category);
-        view.updateScoreCard(category, score);
-        
+        // メッセージを表示
         String categoryJpName = view.getCategoryEnToJpMap().getOrDefault(category, category);
-        view.appendMessage(String.format("%sで%s点を獲得しました。", categoryJpName, score));
+        if (playerName.equals(model.getPlayerName())) {
+            view.appendMessage(String.format("あなたは%sで%s点を獲得しました。", categoryJpName, score));
+        } else {
+            view.appendMessage(String.format("%sさんが%sで%s点を獲得しました。", playerName, categoryJpName, score));
+        }
     }
 
     private void handleGameEnded(String args) {
-        view.appendMessage("\n--- ゲーム " + args + " 終了! ---");
+        // argsの形式: player1,score1;player2,score2;...
+        String[] playerScores = args.split(";");
+        
+        // 結果表示用のメッセージと、最高得点者を見つけるための準備
+        StringBuilder resultMessage = new StringBuilder("== 結果発表 ==\n\n");
+        String winnerName = "";
+        int maxScore = -1;
+
+        for(String ps : playerScores) {
+            String[] parts = ps.split(",");
+            String name = parts[0];
+            int score = Integer.parseInt(parts[1]);
+            
+            resultMessage.append(name).append(" : ").append(score).append("点\n");
+
+            if(score > maxScore) {
+                maxScore = score;
+                winnerName = name;
+            }
+        }
+        
+        resultMessage.append("\n勝者は ").append(winnerName).append(" さんです！\nおめでとうございます！");
+
+        // ダイアログで結果を表示
+        JOptionPane.showMessageDialog(view, resultMessage.toString(), "ゲーム終了！", JOptionPane.INFORMATION_MESSAGE);
+        
+        // モデルとビューをリセットして、ロビー画面に戻る
         model.resetForNewGame();
         view.resetScoreCard();
         view.showLobbyScreen();
+        
+        view.resetLobbyInfo(); 
     }
 
     private void handleError(String args) {
@@ -251,8 +305,7 @@ public class YachtClientController extends WindowAdapter implements Runnable, Ac
                 }
                 break;
             case "roll_dice":
-                // サーバーにリクエストを送る前に、まずクライアント側でアニメーションを開始する
-                view.startDiceAnimation(); 
+                // サーバーにリクエストを送る前に、まずクライアント側でアニメーションを開始する 
                 sendMessage(model.getCurrentGameId() + ":" + CMD_ROLL_DICE + ":" + view.getDiceKeepPattern());
                 break;
             default:

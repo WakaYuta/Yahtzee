@@ -47,7 +47,7 @@ public class YachtClientApp {
 
             view.setController(controller);
             
-            view.setSize(900, 600);
+            view.setSize(1200, 800);
 
             view.setVisible(true);
         });
